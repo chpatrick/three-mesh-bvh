@@ -1,7 +1,6 @@
 import { Vector3, Vector2, Triangle, DoubleSide, BackSide, Face3 } from 'three';
 
-// Ripped and modified From THREE.js Mesh raycast
-// https://github.com/mrdoob/three.js/blob/0aa87c999fe61e216c1133fba7a95772b503eddf/src/objects/Mesh.js#L115
+// From THREE.js Mesh raycast
 var vA = new Vector3();
 var vB = new Vector3();
 var vC = new Vector3();
@@ -10,8 +9,23 @@ var uvA = new Vector2();
 var uvB = new Vector2();
 var uvC = new Vector2();
 
+var barycoord = new Vector3();
 var intersectionPoint = new Vector3();
 var intersectionPointWorld = new Vector3();
+
+function uvIntersection( point, p1, p2, p3, uv1, uv2, uv3 ) {
+
+	Triangle.barycoordFromPoint( point, p1, p2, p3, barycoord );
+
+	uv1.multiplyScalar( barycoord.x );
+	uv2.multiplyScalar( barycoord.y );
+	uv3.multiplyScalar( barycoord.z );
+
+	uv1.add( uv2 ).add( uv3 );
+
+	return uv1.clone();
+
+}
 
 function checkIntersection( object, material, raycaster, ray, pA, pB, pC, point ) {
 
@@ -59,12 +73,12 @@ function checkBufferGeometryIntersection( object, raycaster, ray, position, uv, 
 			uvB.fromBufferAttribute( uv, b );
 			uvC.fromBufferAttribute( uv, c );
 
-			intersection.uv = Triangle.getUV( intersectionPoint, vA, vB, vC, uvA, uvB, uvC, new Vector2( ) );
+			intersection.uv = uvIntersection( intersectionPoint, vA, vB, vC, uvA, uvB, uvC );
 
 		}
 
 		var normal = new Vector3();
-		intersection.face = new Face3( a, b, c, Triangle.getNormal( vA, vB, vC, normal ) );
+		intersection.face = new Face3( a, b, c, Triangle.normal( vA, vB, vC, normal ) );
 		intersection.faceIndex = a;
 
 	}
